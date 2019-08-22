@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace Capi.Entities
+namespace Capi.Modelos
 {
-    public class Autor
+    public class AutorDTO
     {
         public int Id { get; set; }
         [Required]
         public string Nombre { get; set; }
         public string Identificacion { get; set; }
-        public List<Libro> Libros { get; set; }
+        public List<LibroDTO> Libros { get; set; }
     }
 }

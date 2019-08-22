@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using AutoMapper;
 using Capi.Entities;
+using Capi.Modelos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,24 +15,32 @@ namespace Capi.Controllers
     public class AutorController : ControllerBase
     {
         private readonly DataContext context;
-        public AutorController(DataContext context)
+        private readonly IMapper mapper;
+
+        public AutorController(DataContext context, IMapper mapper)
         {
             this.context = context;
+            this.mapper = mapper;
         }
         [HttpGet]
-        public ActionResult<IEnumerable<Entities.Autor>> Get()
+        public ActionResult<IEnumerable<AutorDTO>> Get()
         {
-            return context.Autores.ToList();
+            var autores = context.Autores.ToList();
+            var autoresdto = mapper.Map<List<AutorDTO>>(autores);
+            return autoresdto;
         }
+
         [HttpGet("{id}", Name = "ire")]
-        public ActionResult<Autor> Ir(int id)
+        public async Task<ActionResult<AutorDTO>> Ir(int id)
         {
-            var elid = context.Autores.FirstOrDefault(x => x.Id == id);
+            var elid = await context.Autores.FirstOrDefaultAsync(x => x.Id == id);
             if (elid == null)
             {
                 return NotFound();
             }
-            return elid;
+
+            var autordto = mapper.Map<AutorDTO>(elid);
+            return autordto;
         }
 
         [HttpPost]
