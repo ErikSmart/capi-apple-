@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Capi.Entities;
 using Capi.Modelos;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,6 +14,7 @@ namespace Capi.Controllers
 {
     [Route("api/[Controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class AutorController : ControllerBase
     {
         private readonly DataContext context;

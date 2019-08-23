@@ -14,7 +14,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace Capi
 {
@@ -35,6 +37,19 @@ namespace Capi
             .AddEntityFrameworkStores<DataContext>()
             .AddDefaultTokenProviders();
 
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+.AddJwtBearer(options =>
+       options.TokenValidationParameters = new TokenValidationParameters
+       {
+           ValidateIssuer = false,
+           ValidateAudience = false,
+           ValidateLifetime = true,
+           ValidateIssuerSigningKey = true,
+           IssuerSigningKey = new SymmetricSecurityKey(
+          Encoding.UTF8.GetBytes(Configuration["jwt:key"])),
+           ClockSkew = TimeSpan.Zero
+       });
+
             services.AddAutoMapper();
             services.AddDbContext<DataContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Conexion")));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddJsonOptions(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
@@ -52,8 +67,8 @@ namespace Capi
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
-
             app.UseHttpsRedirection();
+            app.UseAuthentication();
             app.UseMvc();
         }
     }
