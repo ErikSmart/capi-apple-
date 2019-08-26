@@ -14,7 +14,6 @@ namespace Capi.Controllers
 {
     [Route("api/[Controller]")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class AutorController : ControllerBase
     {
         private readonly DataContext context;
@@ -26,6 +25,7 @@ namespace Capi.Controllers
             this.mapper = mapper;
         }
         [HttpGet]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public ActionResult<IEnumerable<AutorDTO>> Get()
         {
             var autores = context.Autores.ToList();
