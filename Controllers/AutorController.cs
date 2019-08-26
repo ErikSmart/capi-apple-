@@ -7,6 +7,7 @@ using Capi.Entities;
 using Capi.Modelos;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,7 +15,6 @@ namespace Capi.Controllers
 {
     [Route("api/[Controller]")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class AutorController : ControllerBase
     {
         private readonly DataContext context;
@@ -26,6 +26,7 @@ namespace Capi.Controllers
             this.mapper = mapper;
         }
         [HttpGet]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public ActionResult<IEnumerable<AutorDTO>> Get()
         {
             var autores = context.Autores.ToList();
@@ -34,6 +35,8 @@ namespace Capi.Controllers
         }
 
         [HttpGet("{id}", Name = "ire")]
+        //Permite que cors pase
+        [EnableCors("PermitirApiRequest")]
         public async Task<ActionResult<AutorDTO>> Ir(int id)
         {
             var elid = await context.Autores.FirstOrDefaultAsync(x => x.Id == id);
