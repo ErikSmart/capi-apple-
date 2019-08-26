@@ -32,7 +32,14 @@ namespace Capi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors();
+            //Confiracion corse poner esto en el controller donde quiera aplicarse [EnableCors("PermitirApiRequest")]
+            services.AddCors(options =>
+           {
+               options.AddPolicy("PermitirApiRequest",
+                   builder => builder.WithOrigins("http://www.apirequest.io").WithMethods("*").AllowAnyHeader());
+           });
+
+            //Poner esto en el controller para permitir acceso [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
             services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<DataContext>()
             .AddDefaultTokenProviders();
@@ -69,7 +76,8 @@ namespace Capi
             }
             app.UseHttpsRedirection();
             app.UseAuthentication();
-            app.UseCors(builder => builder.WithOrigins("http://www.apirequest.io").WithMethods("*").WithHeaders("*"));
+            //Corse por Middelware no recomenble se pone de manera global
+            //app.UseCors(builder => builder.WithOrigins("http://www.apirequest.io").WithMethods("*").WithHeaders("*"));
             app.UseMvc();
         }
     }
