@@ -17,6 +17,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace Capi
 {
@@ -43,6 +44,12 @@ namespace Capi
             services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<DataContext>()
             .AddDefaultTokenProviders();
+
+            //Swagger 
+            services.AddSwaggerGen(config =>
+            {
+                config.SwaggerDoc("v1", new Info { Title = "Mi web api ", Version = "v1" });
+            });
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
@@ -74,6 +81,12 @@ namespace Capi
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+            //Swagger 
+            app.UseSwagger();
+            app.UseSwaggerUI(config =>
+            {
+                config.SwaggerEndpoint("/swagger/v1/swagger.json", "Mi api V1");
+            });
             app.UseHttpsRedirection();
             app.UseAuthentication();
             //Corse por Middelware no recomenble se pone de manera global
