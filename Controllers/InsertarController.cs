@@ -22,11 +22,20 @@ namespace Capi.Controllers
         public async Task<ActionResult<IEnumerable<Entities.Producto>>> ver()
         {
             var idproducto = await context.productos.Select(x => x.Id).FirstOrDefaultAsync();
-            var insertar = new Producto();
-            insertar.nomproducto = "Cepillo suave";
-            insertar.precio = 343.21;
-
+            var insertar = new Cancelado();
+            insertar.cantidadcompra = 50;
+            insertar.fecha = DateTime.Now;
+            insertar.productoId = 2;
             context.Add(insertar);
+            context.SaveChanges();
+
+            var Prepa = new Preparando();
+            Prepa.cantidadcompra = 2;
+            Prepa.fecha = DateTime.Now;
+            Prepa.productoId = 3;
+            Prepa.sinenviar = "si";
+            Prepa.enpaqueteria = "no";
+            context.Add(Prepa);
             context.SaveChanges();
             return Ok();
 

@@ -16,5 +16,23 @@ namespace Capi.Entities
         public Producto producto { get; set; }
         //Crea la relacion FOREIGN KEY de Cliente (sin esta no se relaciona)
         public Cliente cliente { get; set; }
+        public int productoId { get; set; }
+    }
+
+    //Herencia de tablas
+
+    public class Entregado : Detalle
+    {
+
+    }
+
+    public class Cancelado : Detalle
+    {
+
+    }
+    public class Preparando : Detalle
+    {
+        public string enpaqueteria { get; set; }
+        public string sinenviar { get; set; }
     }
 }
