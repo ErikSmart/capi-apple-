@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Capi.Entities;
+using Capi.Modelos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,9 +15,11 @@ namespace Capi.Controllers
     public class VentasController : ControllerBase
     {
         private DataContext context;
-        public VentasController(DataContext context)
+        private IMapper mapper;
+        public VentasController(DataContext context, IMapper mapper)
         {
             this.context = context;
+            this.mapper = mapper;
         }
         [HttpGet("/")]
         public async Task<ActionResult<IEnumerable<Entities.Producto>>> ir()
@@ -26,9 +30,19 @@ namespace Capi.Controllers
 
             return vista;
         }
+
+        [HttpGet("/dto")]
+        public async Task<ActionResult<IEnumerable<ProductoDTO>>> mostrarmiDTO()
+        {
+            var buscar = await context.productos.ToListAsync();
+            var pDTO = mapper.Map<List<ProductoDTO>>(buscar);
+            return Ok(pDTO);
+        }
+
         [HttpGet("/abrir")]
         public async Task<ActionResult<IEnumerable<Entities.Detalle>>> LaHerencia()
         {
+            // Para OfType es para traer los datos de la herencia
             var herencia = await context.detalles.OfType<Preparando>().ToListAsync();
             return herencia;
         }
@@ -39,7 +53,17 @@ namespace Capi.Controllers
             await context.SaveChangesAsync();
             return Ok(producto);
         }
+        //Crear registro DTO con auto mapper revisar Startup.cs y agregar services.AddAutoMapper(options => { options.CreateMap<CrearProductoDTO, Producto>(); }); 
+        [HttpPost("/dto")]
+        public async Task<ActionResult> insertar([FromBody] CrearProductoDTO crearProductoDTO)
+        {
+            var productodto = mapper.Map<Producto>(crearProductoDTO);
+            await context.AddAsync(productodto);
+            await context.SaveChangesAsync();
+            var devolver = mapper.Map<ProductoDTO>(productodto);
+            return Ok(devolver);
 
+        }
         [HttpPut("{id}")]
         public async Task<ActionResult<Producto>> actulizar(int id, [FromBody] Producto producto)
         {

@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Swashbuckle.AspNetCore.Swagger;
+using Capi.Entities;
 
 namespace Capi
 {
@@ -63,8 +64,11 @@ namespace Capi
           Encoding.UTF8.GetBytes(Configuration["jwt:key"])),
            ClockSkew = TimeSpan.Zero
        });
-
-            services.AddAutoMapper();
+            //Agregando DTO POST en Mapper
+            services.AddAutoMapper(options =>
+            {
+                options.CreateMap<CrearProductoDTO, Producto>();
+            });
             services.AddDbContext<DataContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Conexion")));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddJsonOptions(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
         }
