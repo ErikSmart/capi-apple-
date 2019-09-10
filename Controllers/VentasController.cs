@@ -29,11 +29,41 @@ namespace Capi.Controllers
         [HttpGet("/abrir")]
         public async Task<ActionResult<IEnumerable<Entities.Detalle>>> LaHerencia()
         {
-
-
             var herencia = await context.detalles.OfType<Preparando>().ToListAsync();
-
             return herencia;
+        }
+        [HttpPost]
+        public async Task<ActionResult<Producto>> agregar([FromBody] Producto producto)
+        {
+            context.Add(producto);
+            await context.SaveChangesAsync();
+            return Ok(producto);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult<Producto>> actulizar(int id, [FromBody] Producto producto)
+        {
+
+            if (id != producto.Id)
+            {
+                return BadRequest();
+            }
+            context.Entry(producto).State = EntityState.Modified;
+            await context.SaveChangesAsync();
+            return Ok("producto");
+        }
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<Producto>> eliminar(int id)
+        {
+            var sinoexiste = await context.productos.FirstOrDefaultAsync(x => x.Id == id);
+            if (sinoexiste == null)
+            {
+                return NotFound();
+            }
+            var encontrar = await context.productos.FirstAsync(x => x.Id == id);
+            context.productos.Remove(encontrar);
+            await context.SaveChangesAsync();
+            return Ok(encontrar);
         }
 
     }

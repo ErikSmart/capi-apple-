@@ -91,6 +91,7 @@ namespace Capi
             app.UseAuthentication();
             //Corse por Middelware no recomenble se pone de manera global
             //app.UseCors(builder => builder.WithOrigins("http://www.apirequest.io").WithMethods("*").WithHeaders("*"));
+            //app.UseStatusCodePages();
             app.UseMvc();
         }
     }
