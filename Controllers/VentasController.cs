@@ -5,11 +5,13 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Capi.Entities;
 using Capi.Modelos;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Capi.Controllers
 {
+    [EnableCors("PermitirApiRequest")]
     [ApiController]
     [Route("/")]
     public class VentasController : ControllerBase
@@ -24,11 +26,18 @@ namespace Capi.Controllers
         [HttpGet("/")]
         public async Task<ActionResult<IEnumerable<Entities.Producto>>> ir()
         {
+
+
             var vista = await context.productos.Include(x => x.detalle).ThenInclude(y => y.cliente).ToListAsync();
 
-            //var herencia = await context.detalles.OfType<Cancelado>().ToListAsync();
+            //Prueba para el tiempo 
+
+            //await Task.Delay(10000);
 
             return vista;
+            // Trer solo los regitros de la Herencia 
+
+            //var herencia = await context.detalles.OfType<Cancelado>().ToListAsync();
         }
 
         [HttpGet("/dto")]

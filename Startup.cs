@@ -38,7 +38,8 @@ namespace Capi
             services.AddCors(options =>
            {
                options.AddPolicy("PermitirApiRequest",
-                   builder => builder.WithOrigins("http://www.apirequest.io").WithMethods("*").AllowAnyHeader());
+                    //builder => builder.WithOrigins("http://www.apirequest.io").WithMethods("*").AllowAnyHeader());
+                    builder => builder.WithOrigins("http://localhost:4200").WithMethods("*").AllowAnyHeader());
            });
 
             //Poner esto en el controller para permitir acceso [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
