@@ -6,6 +6,7 @@ using AutoMapper;
 using Capi.Entities;
 using Capi.Modelos;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -84,6 +85,51 @@ namespace Capi.Controllers
             context.Entry(producto).State = EntityState.Modified;
             await context.SaveChangesAsync();
             return Ok("producto");
+        }
+        //Actulizacion Parcial con patch RFC 6902 {"op": "replace","path": "/nomproducto", "value":"Lo que se quiere replazar" }
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> parcial(int id, [FromBody] JsonPatchDocument<ProductoDTO> patchDocument)
+        {
+            if (patchDocument == null)
+            {
+                return BadRequest();
+            }
+
+            var miproducto = await context.productos.FirstOrDefaultAsync(x => x.Id == id);
+            if (miproducto == null)
+            {
+                return NotFound();
+            }
+
+
+            ProductoDTO productoDTO = mapper.Map<ProductoDTO>(miproducto);
+
+
+            patchDocument.ApplyTo(productoDTO, ModelState);
+
+            var esvalido = TryValidateModel(productoDTO);
+
+            if (!esvalido)
+            {
+                return BadRequest(ModelState);
+            }
+            await context.SaveChangesAsync();
+
+
+
+            return Ok(productoDTO);
+
+        }
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Producto>> detalle(int id)
+        {
+            var unico = await context.productos.FirstOrDefaultAsync(x => x.Id == id);
+            if (unico == null)
+            {
+                return NotFound();
+            }
+
+            return unico;
         }
         [HttpDelete("{id}")]
         public async Task<ActionResult<Producto>> eliminar(int id)
