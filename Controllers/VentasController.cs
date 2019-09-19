@@ -74,21 +74,26 @@ namespace Capi.Controllers
             return Ok(devolver);
 
         }
+         //Crear registro DTO con auto mapper revisar Startup.cs y agregar services.AddAutoMapper(options => { options.CreateMap<ActualizarProductoDTO, Producto>(); }); 
         [HttpPut("{id}")]
-        public async Task<ActionResult<Producto>> actulizar(int id, [FromBody] Producto producto)
+        public async Task<ActionResult> actulizar(int id, [FromBody] ActualizarProductoDTO crearProductoDTO)
         {
-
-            if (id != producto.Id)
+            /* var productodto = mapper.Map<ProductoDTO>(productos);
+            var devolver = mapper.Map<ActualizarProductoDTO>(productodto); */
+            var productodto = mapper.Map<Producto>(crearProductoDTO);
+            if (id != productodto.Id)
             {
                 return BadRequest();
             }
-            context.Entry(producto).State = EntityState.Modified;
+             context.Entry(productodto).State = EntityState.Modified;
             await context.SaveChangesAsync();
+            
             return Ok("producto");
         }
+        //Crear registro DTO con auto mapper revisar Startup.cs y agregar services.AddAutoMapper(options => { options.CreateMap<CrearProductoDTO, Producto>(); }); 
         //Actulizacion Parcial con patch RFC 6902 {"op": "replace","path": "/nomproducto", "value":"Lo que se quiere replazar" }
         [HttpPatch("{id}")]
-        public async Task<IActionResult> parcial(int id, [FromBody] JsonPatchDocument<ProductoDTO> patchDocument)
+        public async Task<IActionResult> parcial(int id, [FromBody] JsonPatchDocument<ActualizarProductoDTO> patchDocument)
         {
             if (patchDocument == null)
             {
@@ -102,8 +107,8 @@ namespace Capi.Controllers
             }
 
 
-            ProductoDTO productoDTO = mapper.Map<ProductoDTO>(miproducto);
-
+            ActualizarProductoDTO productoDTO = mapper.Map<ActualizarProductoDTO>(miproducto);
+            //mapper.Map(productoDTO, ModelState);
 
             patchDocument.ApplyTo(productoDTO, ModelState);
 

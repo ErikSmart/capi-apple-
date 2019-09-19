@@ -69,6 +69,7 @@ namespace Capi
             services.AddAutoMapper(options =>
             {
                 options.CreateMap<CrearProductoDTO, Producto>();
+                options.CreateMap<ActualizarProductoDTO, Producto>();
             });
             services.AddDbContext<DataContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Conexion")));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddJsonOptions(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
