@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Capi.Modelos;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -11,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Capi
 {
+    [EnableCors("PermitirApiRequest")]
     [Route("api/[Controller]")]
     [ApiController]
     public class CuentaController : ControllerBase
@@ -68,7 +70,10 @@ namespace Capi
         new Claim("miValor", "Lo que yo quiera"),
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
     };
-
+            //para que funcione "JWT:key" se tiene que colocar una en appsettings.json 
+            /*  "JWT": {
+    "key": "aKLMSLK3I4JNKNDKJFNKJN545N4J5N4J54H4G44H5JBSSDBNF3453S2223KJOP"
+  } */
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

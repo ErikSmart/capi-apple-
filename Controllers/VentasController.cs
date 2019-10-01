@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using AutoMapper;
 using Capi.Entities;
 using Capi.Modelos;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +27,7 @@ namespace Capi.Controllers
             this.context = context;
             this.mapper = mapper;
         }
+        //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("/")]
         public async Task<ActionResult<IEnumerable<Entities.Producto>>> ir()
         {
@@ -74,7 +78,7 @@ namespace Capi.Controllers
             return Ok(devolver);
 
         }
-         //Crear registro DTO con auto mapper revisar Startup.cs y agregar services.AddAutoMapper(options => { options.CreateMap<ActualizarProductoDTO, Producto>(); }); 
+        //Crear registro DTO con auto mapper revisar Startup.cs y agregar services.AddAutoMapper(options => { options.CreateMap<ActualizarProductoDTO, Producto>(); }); 
         [HttpPut("{id}")]
         public async Task<ActionResult> actulizar(int id, [FromBody] ActualizarProductoDTO crearProductoDTO)
         {
@@ -85,9 +89,9 @@ namespace Capi.Controllers
             {
                 return BadRequest();
             }
-             context.Entry(productodto).State = EntityState.Modified;
+            context.Entry(productodto).State = EntityState.Modified;
             await context.SaveChangesAsync();
-            
+
             return Ok("producto");
         }
         //Crear registro DTO con auto mapper revisar Startup.cs y agregar services.AddAutoMapper(options => { options.CreateMap<CrearProductoDTO, Producto>(); }); 
