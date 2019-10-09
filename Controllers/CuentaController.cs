@@ -1,14 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using Capi.Modelos;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+
 
 namespace Capi
 {
@@ -17,18 +21,29 @@ namespace Capi
     [ApiController]
     public class CuentaController : ControllerBase
     {
+        private DataContext context;
+        private IMapper mapper;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> roleManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _configuration;
 
         public CuentaController(
             UserManager<ApplicationUser> userManager,
+            //Traer el RoleManager (importante)
+            RoleManager<IdentityRole> roleManager,
             SignInManager<ApplicationUser> signInManager,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            DataContext context,
+            IMapper mapper)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
+            this.context = context;
+            this.mapper = mapper;
+            this.roleManager = roleManager;
+
         }
 
         [HttpPost("Crear")]
@@ -45,7 +60,22 @@ namespace Capi
                 return BadRequest("Username or password invalid");
             }
 
+
+
         }
+        //Creando el Role y asiganacion del role
+        [HttpPost("mirole")]
+        public async Task<ActionResult> mirole([FromBody] RoleInfo model)
+        {
+            var usurio = await _userManager.Users.SingleOrDefaultAsync(x => x.UserName == "e@g.com");
+            var role = new IdentityRole { Name = model.name };
+            //creando el Role
+            var creado = await roleManager.CreateAsync(role);
+            await _userManager.AddToRoleAsync(usurio, "Admin");
+
+            return Ok(creado);
+        }
+
 
         [HttpPost("Login")]
         public async Task<ActionResult<UserToken>> Login([FromBody] UserInfo userInfo)
@@ -60,6 +90,13 @@ namespace Capi
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                 return BadRequest(ModelState);
             }
+        }
+        [HttpGet("Login")]
+        public async Task<ActionResult<IEnumerable<UsuariosDTO>>> Mostrar()
+        {
+            var result = await context.Users.ToListAsync();
+            var pDTO = mapper.Map<List<UsuariosDTO>>(result);
+            return pDTO;
         }
 
         private UserToken BuildToken(UserInfo userInfo)

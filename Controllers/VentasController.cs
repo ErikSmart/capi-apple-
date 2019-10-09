@@ -28,6 +28,7 @@ namespace Capi.Controllers
             this.mapper = mapper;
         }
         //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        //[Authorize(Roles = "e@g.com, Admin")]
         [HttpGet("/")]
         public async Task<ActionResult<IEnumerable<Entities.Producto>>> ir()
         {
