@@ -6,7 +6,7 @@ using Capi.Modelos;
 
 namespace Capi
 {
-    public class DataContext : IdentityDbContext<ApplicationUser>
+    public class DataContext : IdentityDbContext
     {
         public DataContext(DbContextOptions<DataContext> options) : base(options) { }
         public DbSet<Autor> Autores { get; set; }
@@ -17,6 +17,8 @@ namespace Capi
         public DbSet<Entregado> enregado { get; set; }
         public DbSet<Cancelado> cancelado { get; set; }
         public DbSet<Preparando> preparando { get; set; }
+
+        public DbSet<ApplicationUser> ApplicationUsers { get; set; }
 
     }
 }
