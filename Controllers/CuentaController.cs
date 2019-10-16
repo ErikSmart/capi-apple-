@@ -78,18 +78,41 @@ namespace Capi
 
 
         [HttpPost("Login")]
-        public async Task<ActionResult<UserToken>> Login([FromBody] UserInfo userInfo)
+        public async Task<IActionResult> Login(UserInfo userInfo)
         {
-            var result = await _signInManager.PasswordSignInAsync(userInfo.email, userInfo.contrasenia, isPersistent: false, lockoutOnFailure: false);
-            if (result.Succeeded)
+            /*  var result = await _signInManager.PasswordSignInAsync(userInfo.email, userInfo.contrasenia, isPersistent: false, lockoutOnFailure: false);
+             if (result.Succeeded)
+             {
+                 return BuildToken(userInfo);
+             }
+             else
+             {
+                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                 return BadRequest(ModelState);
+             } */
+            var user = await _userManager.FindByNameAsync(userInfo.email);
+            if (user != null && await _userManager.CheckPasswordAsync(user, userInfo.contrasenia))
             {
-                return BuildToken(userInfo);
+                //Get role assigned to the user
+                // var role = await _userManager.GetRolesAsync(user);
+                //IdentityOptions _options = new IdentityOptions();
+
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    /*  Subject = new ClaimsIdentity(new Claim[]
+                          {
+                              new Claim("UserID",user.Id.ToString()),
+                              new Claim("Role","Admin")
+                          }), */
+                    Expires = DateTime.UtcNow.AddDays(1),
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:key"])), SecurityAlgorithms.HmacSha256Signature)
+                };
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var securityToken = tokenHandler.CreateToken(tokenDescriptor);
+                var token = tokenHandler.WriteToken(securityToken);
+                return Ok(new { token });
             }
-            else
-            {
-                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                return BadRequest(ModelState);
-            }
+            return Ok();
         }
         [HttpGet("Login")]
         public async Task<ActionResult<IEnumerable<UsuariosDTO>>> Mostrar()

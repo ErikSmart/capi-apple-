@@ -29,6 +29,7 @@ namespace Capi.Controllers
         }
         //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         //[Authorize(Roles = "e@g.com, Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpGet("/")]
         public async Task<ActionResult<IEnumerable<Entities.Producto>>> ir()
         {
