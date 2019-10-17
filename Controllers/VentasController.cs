@@ -28,8 +28,9 @@ namespace Capi.Controllers
             this.mapper = mapper;
         }
         //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        //[Authorize(Roles = "e@g.com, Admin")]
         [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "e@g.com, Admin")]
+        //[Authorize(Roles = "Dios")]
         [HttpGet("/")]
         public async Task<ActionResult<IEnumerable<Entities.Producto>>> ir()
         {
@@ -131,6 +132,7 @@ namespace Capi.Controllers
             return Ok(productoDTO);
 
         }
+        [Authorize(Roles = "Dios")]
         [HttpGet("{id}")]
         public async Task<ActionResult<Producto>> detalle(int id)
         {

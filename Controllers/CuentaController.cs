@@ -12,7 +12,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-
+using Microsoft.Extensions.Options;
+using System.Linq;
 
 namespace Capi
 {
@@ -24,14 +25,14 @@ namespace Capi
         private DataContext context;
         private IMapper mapper;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> roleManager;
+        //private readonly RoleManager<IdentityRole> roleManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _configuration;
 
         public CuentaController(
             UserManager<ApplicationUser> userManager,
-            //Traer el RoleManager (importante)
-            RoleManager<IdentityRole> roleManager,
+            //Traer el RoleManager causa problemas para traer la cabezera [Authorize(Roles = "Admin")] 
+            //RoleManager<IdentityRole> roleManager,
             SignInManager<ApplicationUser> signInManager,
             IConfiguration configuration,
             DataContext context,
@@ -42,7 +43,7 @@ namespace Capi
             _configuration = configuration;
             this.context = context;
             this.mapper = mapper;
-            this.roleManager = roleManager;
+            //this.roleManager = roleManager;
 
         }
 
@@ -63,19 +64,19 @@ namespace Capi
 
 
         }
-        //Creando el Role y asiganacion del role
-        [HttpPost("mirole")]
-        public async Task<ActionResult> mirole([FromBody] RoleInfo model)
-        {
-            var usurio = await _userManager.Users.SingleOrDefaultAsync(x => x.UserName == "e@g.com");
-            var role = new IdentityRole { Name = model.name };
-            //creando el Role
-            var creado = await roleManager.CreateAsync(role);
-            await _userManager.AddToRoleAsync(usurio, "Admin");
+        /*        //Creando el Role y asiganacion del role
+               [HttpPost("mirole")]
+               public async Task<ActionResult> mirole([FromBody] RoleInfo model)
+               {
+                   var usurio = await _userManager.Users.SingleOrDefaultAsync(x => x.UserName == "e@g.com");
+                   var role = new IdentityRole { Name = model.name };
+                   //creando el Role
+                   var creado = await roleManager.CreateAsync(role);
+                   await _userManager.AddToRoleAsync(usurio, "Admin");
 
-            return Ok(creado);
-        }
-
+                   return Ok(creado);
+               }
+        */
 
         [HttpPost("Login")]
         public async Task<IActionResult> Login(UserInfo userInfo)
@@ -90,20 +91,24 @@ namespace Capi
                  ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                  return BadRequest(ModelState);
              } */
+
             var user = await _userManager.FindByNameAsync(userInfo.email);
+
             if (user != null && await _userManager.CheckPasswordAsync(user, userInfo.contrasenia))
             {
                 //Get role assigned to the user
-                // var role = await _userManager.GetRolesAsync(user);
-                //IdentityOptions _options = new IdentityOptions();
+                var role = await _userManager.GetRolesAsync(user);
+
+                IdentityOptions _options = new IdentityOptions();
 
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
-                    /*  Subject = new ClaimsIdentity(new Claim[]
-                          {
-                              new Claim("UserID",user.Id.ToString()),
-                              new Claim("Role","Admin")
-                          }), */
+                    Subject = new ClaimsIdentity(new Claim[]
+                      {
+                          new Claim("userName",user.UserName.ToString()),
+                          //Obtiene la cabezera de Los roles ejemplo [Authorize(Roles = "Admin")]
+                          new Claim(_options.ClaimsIdentity.RoleClaimType,role.FirstOrDefault())
+                      }),
                     Expires = DateTime.UtcNow.AddDays(1),
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:key"])), SecurityAlgorithms.HmacSha256Signature)
                 };
@@ -112,7 +117,8 @@ namespace Capi
                 var token = tokenHandler.WriteToken(securityToken);
                 return Ok(new { token });
             }
-            return Ok();
+            else
+                return BadRequest(new { message = "Usuario o contraseña incorrecto =( " });
         }
         [HttpGet("Login")]
         public async Task<ActionResult<IEnumerable<UsuariosDTO>>> Mostrar()
