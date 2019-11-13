@@ -5,13 +5,19 @@ using System.Net;
 using System.Threading.Tasks;
 using AutoMapper;
 using Capi.Entities;
+using Capi.Hubs;
 using Capi.Modelos;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using System.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace Capi.Controllers
 {
@@ -22,10 +28,20 @@ namespace Capi.Controllers
     {
         private DataContext context;
         private IMapper mapper;
-        public VentasController(DataContext context, IMapper mapper)
+        private SqlConnection conn;
+        private IHubContext<ChatHub> _hub;
+        private readonly IConfiguration configuration;
+        private void Conectar()
+        {
+            string connString = configuration.GetConnectionString("Conexion");
+            var conn = new SqlConnection(connString);
+        }
+        public VentasController(DataContext context, IMapper mapper, IHubContext<ChatHub> hub, IConfiguration configuration)
         {
             this.context = context;
             this.mapper = mapper;
+            this.configuration = configuration;
+            _hub = hub;
         }
         //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [Authorize(Roles = "Admin")]
@@ -34,6 +50,7 @@ namespace Capi.Controllers
         [HttpGet("/")]
         public async Task<ActionResult<IEnumerable<Entities.Producto>>> ir()
         {
+
 
 
             var vista = await context.productos.Include(x => x.detalle).ThenInclude(y => y.cliente).ToListAsync();
@@ -46,6 +63,57 @@ namespace Capi.Controllers
             // Trer solo los regitros de la Herencia 
 
             //var herencia = await context.detalles.OfType<Cancelado>().ToListAsync();
+        }
+        [HttpGet("/ver")]
+        public ActionResult ver()
+        {
+            string connString = configuration.GetConnectionString("Conexion");
+            var conn = new SqlConnection(connString);
+
+
+
+
+            //SqlDataReader
+            conn.Open();
+            List<Producto> teacherList = new List<Producto>();
+
+            string sql = "Select * From productos"; SqlCommand command = new SqlCommand(sql, conn);
+            SqlDataReader dataReader = command.ExecuteReader();
+            while (dataReader.Read())
+            {
+                Producto teacher = new Producto();
+                teacher.Id = Convert.ToInt32(dataReader["Id"]);
+                teacher.nomproducto = Convert.ToString(dataReader["nomproducto"]);
+                teacherList.Add(teacher);
+            }
+
+
+            conn.Close();
+
+            /* string connString = configuration.GetConnectionString("DefaultConnection");
+            using (var conn = new SqlConnection(connString))
+            {
+                conn.Open();
+                //No funciona si usas Select *
+                using (var cmd = new SqlCommand("SELECT Nombre FROM [dbo].Personas", conn))
+                {
+                    return cmd.ExecuteReader().ToString(); // Hay que correr el query
+                }
+            } */
+            var lista = context.productos.Select(r => new { r.nomproducto, r.precio });
+            var lista2 = context.productos.ToList();
+
+            var resultado = context.productos.FromSql("select top(20) percent  id, precio, nomproducto from productos").IgnoreQueryFilters().Select(x => new { x.Id, x.nomproducto });
+
+            var json = JsonConvert.SerializeObject(resultado.ToArray());
+            var jsona = JsonConvert.SerializeObject(lista.ToArray());
+            var jsonaa = JsonConvert.SerializeObject(teacherList.ToArray());
+            var deserializedProduct = JsonConvert.DeserializeObject(json);
+            var deserializedProducta = JsonConvert.DeserializeObject(jsona);
+            var deserializedProductaa = JsonConvert.DeserializeObject(jsonaa);
+
+            return Ok(deserializedProductaa);
+
         }
 
         [HttpGet("/dto")]
@@ -68,6 +136,7 @@ namespace Capi.Controllers
         {
             context.Add(producto);
             await context.SaveChangesAsync();
+            var timerManager = _hub.Clients.All.SendAsync("transferchartdata", producto);
             return Ok(producto);
         }
         //Crear registro DTO con auto mapper revisar Startup.cs y agregar services.AddAutoMapper(options => { options.CreateMap<CrearProductoDTO, Producto>(); }); 

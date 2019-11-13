@@ -19,6 +19,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Swashbuckle.AspNetCore.Swagger;
 using Capi.Entities;
+using Capi.Hubs;
 
 namespace Capi
 {
@@ -39,7 +40,7 @@ namespace Capi
            {
                options.AddPolicy("PermitirApiRequest",
                     //builder => builder.WithOrigins("http://www.apirequest.io").WithMethods("*").AllowAnyHeader());
-                    builder => builder.WithOrigins("http://localhost:4200").WithMethods("*").AllowAnyHeader());
+                    builder => builder.WithOrigins("http://localhost:4200").WithMethods("*").AllowAnyHeader().AllowAnyMethod().AllowCredentials());
            });
 
             //Poner esto en el controller para permitir acceso [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -100,7 +101,7 @@ namespace Capi
                      };
                  });
       */
-
+            services.AddSignalR();
             services.AddDbContext<DataContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Conexion")));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddJsonOptions(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
         }
@@ -126,8 +127,13 @@ namespace Capi
             app.UseHttpsRedirection();
             app.UseAuthentication();
             //Corse por Middelware no recomenble se pone de manera global
-            //app.UseCors(builder => builder.WithOrigins("*").WithMethods("*").WithHeaders("*"));
+            /* app.UseCors(builder => builder.WithOrigins("http://localhost:4200").WithMethods("*").WithHeaders("*").AllowAnyMethod().AllowAnyHeader().AllowCredentials()); */
             //app.UseStatusCodePages();
+            app.UseCors("PermitirApiRequest");
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<ChatHub>("/chatHub");
+            });
             app.UseMvc();
         }
     }
