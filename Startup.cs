@@ -19,6 +19,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Swashbuckle.AspNetCore.Swagger;
 using Capi.Entities;
+using Capi.Hubs;
 
 namespace Capi
 {
@@ -39,11 +40,12 @@ namespace Capi
            {
                options.AddPolicy("PermitirApiRequest",
                     //builder => builder.WithOrigins("http://www.apirequest.io").WithMethods("*").AllowAnyHeader());
-                    builder => builder.WithOrigins("http://localhost:4200").WithMethods("*").AllowAnyHeader());
+                    builder => builder.WithOrigins("http://localhost:4200").WithMethods("*").AllowAnyHeader().AllowAnyMethod().AllowCredentials());
            });
 
             //Poner esto en el controller para permitir acceso [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
             services.AddIdentity<ApplicationUser, IdentityRole>()
+            .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<DataContext>()
             .AddDefaultTokenProviders();
 
@@ -53,23 +55,53 @@ namespace Capi
                 config.SwaggerDoc("v1", new Info { Title = "Mi web api ", Version = "v1" });
             });
 
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
 .AddJwtBearer(options =>
-       options.TokenValidationParameters = new TokenValidationParameters
-       {
-           ValidateIssuer = false,
-           ValidateAudience = false,
-           ValidateLifetime = true,
-           ValidateIssuerSigningKey = true,
-           IssuerSigningKey = new SymmetricSecurityKey(
-          Encoding.UTF8.GetBytes(Configuration["jwt:key"])),
-           ClockSkew = TimeSpan.Zero
-       });
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = false;
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(
+       Encoding.UTF8.GetBytes(Configuration["jwt:key"])),
+        ClockSkew = TimeSpan.Zero
+    };
+});
             //Agregando DTO POST en Mapper
             services.AddAutoMapper(options =>
             {
                 options.CreateMap<CrearProductoDTO, Producto>();
+                options.CreateMap<ActualizarProductoDTO, Producto>();
             });
+
+            //Evitar que llegue a /Account/Login
+            /*      services.ConfigureApplicationCookie(options =>
+                 {
+                     // Cookie settings
+                     //options.Cookie.HttpOnly = true;
+                     //options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+                     //options.LoginPath = "/Account/Login";
+                     //options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+                     //options.SlidingExpiration = true;
+
+                     options.Events.OnRedirectToLogin = context =>
+                     {
+                         context.Response.Headers["Location"] = context.RedirectUri;
+                         context.Response.StatusCode = 401;
+                         return Task.CompletedTask;
+                     };
+                 });
+      */
+            services.AddSignalR();
             services.AddDbContext<DataContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Conexion")));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddJsonOptions(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
         }
@@ -95,8 +127,13 @@ namespace Capi
             app.UseHttpsRedirection();
             app.UseAuthentication();
             //Corse por Middelware no recomenble se pone de manera global
-            //app.UseCors(builder => builder.WithOrigins("http://www.apirequest.io").WithMethods("*").WithHeaders("*"));
+            /* app.UseCors(builder => builder.WithOrigins("http://localhost:4200").WithMethods("*").WithHeaders("*").AllowAnyMethod().AllowAnyHeader().AllowCredentials()); */
             //app.UseStatusCodePages();
+            app.UseCors("PermitirApiRequest");
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<ChatHub>("/chatHub");
+            });
             app.UseMvc();
         }
     }

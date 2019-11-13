@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Capi.Controllers
 {
+    [EnableCors("PermitirApiRequest")]
     [Route("api/[Controller]")]
     [ApiController]
     public class AutorController : ControllerBase
