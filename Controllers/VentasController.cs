@@ -145,6 +145,7 @@ namespace Capi.Controllers
         {
             var productodto = mapper.Map<Producto>(crearProductoDTO);
             await context.AddAsync(productodto);
+            await _hub.Clients.All.SendAsync("transferchartdata", productodto);
             await context.SaveChangesAsync();
             var devolver = mapper.Map<ProductoDTO>(productodto);
             return Ok(devolver);
@@ -161,6 +162,7 @@ namespace Capi.Controllers
             {
                 return BadRequest();
             }
+            await _hub.Clients.All.SendAsync("transferchartdata", productodto);
             context.Entry(productodto).State = EntityState.Modified;
             await context.SaveChangesAsync();
 
@@ -201,7 +203,7 @@ namespace Capi.Controllers
             return Ok(productoDTO);
 
         }
-        [Authorize(Roles = "Dios")]
+        /* [Authorize(Roles = "Dios")] */
         [HttpGet("{id}")]
         public async Task<ActionResult<Producto>> detalle(int id)
         {
@@ -223,6 +225,7 @@ namespace Capi.Controllers
             }
             var encontrar = await context.productos.FirstAsync(x => x.Id == id);
             context.productos.Remove(encontrar);
+            await _hub.Clients.All.SendAsync("transferchartdata", encontrar);
             await context.SaveChangesAsync();
             return Ok(encontrar);
         }
